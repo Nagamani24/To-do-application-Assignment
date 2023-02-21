@@ -84,9 +84,7 @@ app.get("/todos/", async (request, response) => {
       const getStatusPriority = await db.all(getStatusPriorityQuery);
       response.send(getStatusPriority.map((each) => convertToPascalCase(each)));
     }
-  }
-
-  if (status !== undefined && category !== undefined) {
+  } else if (status !== undefined && category !== undefined) {
     if (isStatusPresent !== true) {
       response.status(400);
       response.send("Invalid Todo Status");
@@ -100,8 +98,7 @@ app.get("/todos/", async (request, response) => {
       const getStatusCategory = await db.all(getStatusCategoryQuery);
       response.send(getStatusCategory.map((each) => convertToPascalCase(each)));
     }
-  }
-  if (priority !== undefined && category !== undefined) {
+  } else if (priority !== undefined && category !== undefined) {
     if (isPriorityPresent !== true) {
       response.status(400);
       response.send("Invalid Todo Priority");
@@ -117,16 +114,11 @@ app.get("/todos/", async (request, response) => {
         getPriorityCategory.map((each) => convertToPascalCase(each))
       );
     }
-  }
-  if (
+  } else if (
     status !== undefined &&
     (priority === undefined || category === undefined)
   ) {
-    if (
-      (status === "TO DO") |
-      (status === "IN PROGRESS") |
-      (status === "DONE")
-    ) {
+    if (isStatusPresent === true) {
       const getStatusQuery = `SELECT *
                                   FROM todo
                                   WHERE status = '${status}';`;
@@ -136,8 +128,7 @@ app.get("/todos/", async (request, response) => {
       response.status(400);
       response.send("Invalid Todo Status");
     }
-  }
-  if (
+  } else if (
     (status === undefined || category === undefined) &&
     priority !== undefined
   ) {
@@ -155,8 +146,7 @@ app.get("/todos/", async (request, response) => {
       response.status(400);
       response.send("Invalid Todo Priority");
     }
-  }
-  if (
+  } else if (
     category !== undefined &&
     (priority === undefined || status === undefined)
   ) {
@@ -174,8 +164,7 @@ app.get("/todos/", async (request, response) => {
       response.status(400);
       response.send("Invalid Todo Category");
     }
-  }
-  if (search_q !== undefined) {
+  } else if (search_q !== undefined) {
     const getSearchQuery = `SELECT *
                                 FROM todo
                                 WHERE todo LIKE '%${search_q}%';`;
@@ -205,25 +194,17 @@ app.get("/todos/:todoId/", async (request, response) => {
 //API 3
 
 app.get("/agenda/", async (request, response) => {
-  //const { date } = request.query;
+  const { date } = request.query;
+  const result = isValid(new Date(date));
 
-  const result = isValid(new Date(2021 - 12 - 12));
-  let dueDate = format(new Date(2021, 12, 12), "yyyy-MM-dd");
-  //dueDate = JSON.stringify(date);
-
-  if (result === true) {
+  if (date !== undefined && result === true) {
+    let dueDate = format(new Date(date), "yyyy-MM-dd");
+    //dueDate = JSON.stringify(date);
     const getDueDatedTodoListQuery = `SELECT *
-                                         FROm todo
-                                         WHERE due_date = ${dueDate};`;
+                                         FROM todo;
+                                         WHERE due_date=${dueDate};`;
     const getDueDatedTodoList = await db.all(getDueDatedTodoListQuery);
-    response.send({
-      id: getDueDatedTodoList.id,
-      todo: getDueDatedTodoList.todo,
-      priority: getDueDatedTodoList.priority,
-      status: getDueDatedTodoList.status,
-      category: getDueDatedTodoList.category,
-      dueDate: getDueDatedTodoList.due_date,
-    });
+    response.send(getDueDatedTodoList.map((each) => convertToPascalCase(each)));
   } else {
     response.status(400);
     response.send("Invalid Due Date");
